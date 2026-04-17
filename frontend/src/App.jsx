@@ -1,6 +1,7 @@
 import { useState, useEffect } from "react";
 import { AuthProvider, useAuth } from "./context/AuthContext";
 import AuthPage from "./pages/AuthPage";
+import HomePage from "./pages/HomePage";
 import ScanPage from "./pages/ScanPage";
 import HistoryPage from "./pages/HistoryPage";
 import AdminPage from "./pages/AdminPage";
@@ -10,7 +11,7 @@ import "./index.css";
 
 function AppInner({ theme, toggleTheme }) {
   const { user, loading } = useAuth();
-  const [page, setPage] = useState("scan");
+  const [page, setPage] = useState("home");
 
   if (loading) return (
     <div style={{ display:"flex", alignItems:"center", justifyContent:"center", height:"100vh", gap:12, color:"var(--text-muted)" }}>
@@ -24,6 +25,7 @@ function AppInner({ theme, toggleTheme }) {
     <>
       <Navbar page={page} setPage={setPage} theme={theme} toggleTheme={toggleTheme} />
       <main style={{ position:"relative", zIndex:1 }}>
+        {page === "home"    && <HomePage setPage={setPage} />}
         {page === "scan"    && <ScanPage theme={theme} />}
         {page === "history" && <HistoryPage />}
         {page === "admin"   && <AdminPage />}
