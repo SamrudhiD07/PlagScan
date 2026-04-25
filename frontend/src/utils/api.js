@@ -1,4 +1,4 @@
-const BASE = import.meta.env.VITE_API_URL || "http://localhost:5000/api";
+const BASE = import.meta.env.VITE_API_URL;
 
 async function request(path, options = {}, token = null) {
   const headers = { "Content-Type": "application/json", ...options.headers };
