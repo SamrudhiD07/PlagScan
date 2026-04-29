@@ -1,4 +1,5 @@
 import logging
+import os
 from flask import Flask, request, jsonify
 from flask_cors import CORS
 from plagiarism_engine import analyze, analyze_library, extract_text, get_embeddings
@@ -7,11 +8,10 @@ logging.basicConfig(level=logging.INFO)
 logger = logging.getLogger(__name__)
 
 app = Flask(__name__)
-app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024 # Buffer
+app.config["MAX_CONTENT_LENGTH"] = 100 * 1024 * 1024
 CORS(app)
 
 # MongoDB Setup for Direct Library Access
-import os
 from pymongo import MongoClient
 MONGO_URI = os.getenv("MONGO_URI", "mongodb://localhost:27017/plagiarism_db")
 mongo_client = MongoClient(MONGO_URI)
@@ -46,7 +46,8 @@ def health():
 def extract_endpoint():
     f = request.files.get("file")
     err = _validate(f)
-    if err: return jsonify({"error": err}), 400
+    if err:
+        return jsonify({"error": err}), 400
     try:
         text = extract_text(f._cached_bytes, f.filename)
         return jsonify({"text": text})
@@ -57,14 +58,14 @@ def extract_endpoint():
 def preprocess_endpoint():
     f = request.files.get("file")
     if not f:
-        # Maybe text was sent instead of file
         text = request.json.get("text") if request.is_json else None
-        if not text: return jsonify({"error": "No file or text"}), 400
+        if not text:
+            return jsonify({"error": "No file or text"}), 400
     else:
         err = _validate(f)
-        if err: return jsonify({"error": err}), 400
+        if err:
+            return jsonify({"error": err}), 400
         text = extract_text(f._cached_bytes, f.filename)
-    
     try:
         data = get_embeddings(text)
         return jsonify(data)
@@ -96,11 +97,9 @@ def analyze_endpoint():
 def analyze_library_endpoint():
     f = request.files.get("submitted")
     err = _validate(f)
-    if err: return jsonify({"error": err}), 400
-    
+    if err:
+        return jsonify({"error": err}), 400
     try:
-        # Fetch library documents directly from MongoDB and convert ObjectId to string
-        # Including sentences and embeddings in the projection
         library_docs = []
         for doc in library_collection.find({}, {"title": 1, "text": 1, "sentences": 1, "embeddings": 1}):
             doc["_id"] = str(doc["_id"])
@@ -117,4 +116,5 @@ def analyze_library_endpoint():
         return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=8000, debug=False)
+    port = int(os.environ.get("PORT", 8000))
+    app.run(host="0.0.0.0", port=port, debug=False)
